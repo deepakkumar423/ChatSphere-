@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social App with Supabase</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: #000000;
+            border: 1px solid #262626;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .auth-screen {
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .auth-screen h1 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: #121212;
+            border: 1px solid #363636;
+            border-radius: 6px;
+            color: white;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #a8a8a8;
+        }
+
+        .switch-auth span {
+            color: #0095f6;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .app-header {
+            height: 50px;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #121212;
+        }
+
+        .app-logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+            font-size: 20px;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stories-bar {
+            display: flex;
+            gap: 15px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            border-bottom: 1px solid #121212;
+            scrollbar-width: none;
+        }
+
+        .story-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            gap: 5px;
+        }
+
+        .story-ring {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .story-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #000;
+            object-fit: cover;
+        }
+
+        .post-card {
+            border-bottom: 1px solid #121212;
+            margin-bottom: 15px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+        }
+
+        .post-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 450px;
+            object-fit: cover;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 16px;
+            font-size: 20px;
+        }
+
+        .left-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .post-likes {
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .bottom-nav {
+            height: 50px;
+            border-top: 1px solid #121212;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #000000;
+        }
+
+        .nav-item {
+            color: white;
+            font-size: 22px;
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background-color: #ff3040;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 10px;
+        }
+
+        .nav-profile-img {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #ffffff;
+        }
+
+        .problem-btn {
+            position: absolute;
+            bottom: 60px;
+            right: 15px;
+            background: #262626;
+            color: #ff4d4d;
+            border: 1px solid #363636;
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .problem-modal {
+            display: none;
+            position: absolute;
+            bottom: 105px;
+            right: 15px;
+            width: 260px;
+            background: #121212;
+            border: 1px solid #363636;
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 11;
+        }
+
+        .problem-modal textarea {
+            width: 100%;
+            height: 70px;
+            background: #000;
+            border: 1px solid #363636;
+            color: white;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 12px;
+            margin-top: 8px;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. SIGN UP SCREEN -->
+        <div id="signup-screen" class="auth-screen">
+            <h1>App Logo</h1>
+            <input type="text" id="su-email" class="input-field" placeholder="Email">
+            <input type="password" id="su-pass" class="input-field" placeholder="Password">
+            <button class="btn-primary" onclick="handleSignUp()">Sign Up</button>
+            <p class="switch-auth">Have an account? <span onclick="switchScreen('login-screen')">Log in</span></p>
+        </div>
+
+        <!-- 2. LOGIN SCREEN -->
+        <div id="login-screen" class="auth-screen hidden">
+            <h1>App Logo</h1>
+            <input type="text" id="li-email" class="input-field" placeholder="Email">
+            <input type="password" id="li-pass" class="input-field" placeholder="Password">
+            <button class="btn-primary" onclick="handleLogin()">Log In</button>
+            <p class="switch-auth">Don't have an account? <span onclick="switchScreen('signup-screen')">Sign Up</span></p>
+        </div>
+
+        <!-- 3. MAIN APP SCREEN -->
+        <div id="main-app" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
+            
+            <div class="app-header">
+                <i class="fa-regular fa-square-plus"></i>
+                <div class="app-logo">App Logo</div>
+                <div class="header-icons">
+                    <i class="fa-regular fa-heart"></i>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <div class="stories-bar">
+                    <div class="story-item">
+                        <div class="story-ring" style="background: none; border: 1px solid #333;">
+                            <img src="https://via.placeholder.com/60" class="story-img" alt="Your Story">
+                        </div>
+                        <span>Your story</span>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-user">
+                            <img src="https://via.placeholder.com/32" class="user-avatar" alt="Avatar">
+                            <span class="user-name">user_profile</span>
+                        </div>
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </div>
+
+                    <img src="https://via.placeholder.com/400x500/222222/FFFFFF?text=Post+Image" class="post-image" alt="Post">
+
+                    <div class="post-actions">
+                        <div class="left-actions">
+                            <i class="fa-regular fa-heart"></i>
+                            <i class="fa-regular fa-comment"></i>
+                            <i class="fa-solid fa-repeat"></i>
+                            <i class="fa-regular fa-paper-plane"></i>
+                        </div>
+                        <i class="fa-regular fa-bookmark"></i>
+                    </div>
+
+                    <div class="post-likes">
+                        Liked by others
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item"><i class="fa-solid fa-house"></i></div>
+                <div class="nav-item"><i class="fa-solid fa-clapperboard"></i></div>
+                <div class="nav-item">
+                    <i class="fa-regular fa-paper-plane"></i>
+                    <span class="badge">1</span>
+                </div>
+                <div class="nav-item"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <div class="nav-item">
+                    <img src="https://via.placeholder.com/30" class="nav-profile-img" alt="Profile">
+                </div>
+            </div>
+
+            <button class="problem-btn" onclick="toggleProblemModal()">⚠️ Problem?</button>
+
+            <div id="problem-modal" class="problem-modal">
+                <h4 style="font-size: 13px;">Report Issue</h4>
+                <textarea id="prob-text" placeholder="Describe your issue..."></textarea>
+                <button class="btn-primary" style="padding: 6px; font-size: 12px;" onclick="submitProblem()">Submit</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIGURATION ---
+        // Yahan apni Supabase Project URL aur Anon Key daliye:
+        const SUPABASE_URL = 'https://rgmjsopiqexqxgsfunuv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_anV8sUi_XTVZfXorSx8-QA_3RzsuajN';
+
+        // Supabase client initialize karna
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Screen Switcher
+        function switchScreen(screenId) {
+            document.getElementById('signup-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Real Sign Up with Supabase Auth
+        async function handleSignUp() {
+            const email = document.getElementById('su-email').value;
+            const password = document.getElementById('su-pass').value;
+
+            if(!email || !password) {
+                alert("Please fill email and password!");
+                return;
+            }
+
+            const { data, error } = await _supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("Sign Up Error: " + error.message);
+            } else {
+                alert("Sign Up successful! Please log in.");
+                switchScreen('login-screen');
+            }
+        }
+
+        // Real Login with Supabase Auth
+        async function handleLogin() {
+            const email = document.getElementById('li-email').value;
+            const password = document.getElementById('li-pass').value;
+
+            if(!email || !password) {
+                alert("Please enter email and password!");
+                return;
+            }
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("Login Error: " + error.message);
+            } else {
+                alert("Login successful!");
+                switchScreen('main-app');
+            }
+        }
+
+        // Problem Popup Toggle
+        function toggleProblemModal() {
+            const modal = document.getElementById('problem-modal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Submit Problem Action
+        async function submitProblem() {
+            const text = document.getElementById('prob-text').value;
+            if(!text.trim()) {
+                alert("Please write a message!");
+                return;
+            }
+            alert("Problem report sent successfully!");
+            document.getElementById('prob-text').value = '';
+            document.getElementById('problem-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
